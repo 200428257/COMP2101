@@ -1,6 +1,7 @@
 #!/bin/bash
 snap install lxd
-sudo lxc launch ubuntu:22.04 COMP2101-S22
+lxd init COMP2101-S22
+lxc launch COMP2101-S22
 hostname='COMP2101-S22'
 lxc network show lxdbr0>>~/COMP2101/bash/containerinfo.txt
 ipaddress=$(awk '/ipv4.address/ {print $2}' ~/COMP2101/bash/containerinfo.txt)
