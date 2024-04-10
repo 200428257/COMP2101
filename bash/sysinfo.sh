@@ -1,31 +1,72 @@
-
 #!/bin/bash
-#Line 3 Stores the output of the hostnamectl command which gives information on the host's machine such as the Static hostname, Machine ID, OS, etc.... Into a variable
-hostinfo=$(hostnamectl)
-#Line 5 is a command that will store the FQDN of the machine into a variable.
-fqdn=$(hostname)
-echo " "
-echo "Report for myvm"
-echo "===================="
-#Line 10 will display the information stored in the variable.
-echo FQDN: $fqdn
-#Line 12 is similar to line 5 but for the df output.
-df=$(df -h)
-#Line 14 and 15 are both extracting specific lines of data within the df variable using the Grep command and storing it in their own variables for further use.
-sda3=$(echo "$df" | grep '/dev/sda3')
-freespace=$(echo "$sda3" | awk 'BEGIN {sum=0} {sum=sum+$4} END {print sum}')
-#Line 18 and 19 does the same as Line 10 with different variable.
-echo "Root Filesystem Free Space: $freespace"'G'
-#Line 21 stores all the machine IP Adresses in a variable, it will store both ipv4 and ipv6. However mine only has a ipv4.
-ipaddress=$(hostname -I)
-# Line 23 does the same as Line 10 but with different variable
-echo "Ip Addresse: $ipaddress"
-osinfo=$(hostnamectl)
-osversion=$(echo "$osinfo" | grep 'Operating')
-os=$(echo "$osversion" | awk '{getline} {print $3, $4}')
-distroname=$(echo "$osinfo" | grep 'Kernel')
-distrofullname=$(echo "$distroname" | awk '{getline} {print $2, $3}')
-distro=$(echo "$distrofullname" | cut -b 1-11)
-echo "Operating System name and Version: $os"'/'"$distro"
-echo "===================="
-echo " "
+if (($EUID > 0)); then
+ echo "Admin privileges required to execute this script. Please log in as root/sudo."
+ exit 1
+else
+ hostinfo=$(hostnamectl)
+ fqdn=$(hostname)
+ lshw=$(lshw -class system)
+ lshwvendor=$(echo "$lshw" | grep 'vendor')
+ compvendor=$(echo "$lshwvendor" | awk '!/Intel/' | cut -b 13-)
+ compmodel=$(echo "$lshw" | grep 'description' | cut -b 18-)
+ compserial=$(echo "$lshw" | grep 'serial' | cut -b 13-)
+ lscpu=$(lscpu)
+ cpumanu=$(echo "$lscpu" | grep 'Vendor' | awk '{getline} {print $3}')
+ cpumodel=$(echo "$lscpu" | grep 'Model name' | cut -b 37-)
+ cpuarch=$(echo "$lscpu" | grep 'Architecture' | awk '{getline} {print $2}')
+ cpucore=$(echo "$lscpu" | grep 'Core(s)' | awk '{getline} {print $4}')
+ cpuspeed=$(cat /proc/cpuinfo | grep MHz)
+ cpul1d=$(lscpu | grep "L1d cache")
+ cpul1i=$(lscpu | grep "L1i cache")
+ cpul2=$(lscpu | grep "L2 cache")
+ cpul3=$(lscpu | grep "L3 cache")
+ #echo FQDN: $fqdn
+ #df=$(df -h)
+ #sda3=$(echo "$df" | grep '/dev/sda3')
+ #freespace=$(echo "$sda3" | awk 'BEGIN {sum=0} {sum=sum+$4} END {print sum}')
+ #echo "Root Filesystem Free Space: $freespace"'G'
+ #ipaddress=$(hostname -I)
+ #echo "Ip Addresse: $ipaddress"
+ osinfo=$(hostnamectl)
+ osversion=$(echo "$osinfo" | grep 'Operating')
+ os=$(echo "$osversion" | awk '{getline} {print $3, $4}')
+ distroname=$(echo "$osinfo" | grep 'Kernel')
+ distrofullname=$(echo "$distroname" | awk '{getline} {print $2, $3}')
+ distro=$(echo "$distrofullname" | cut -b 1-11)
+ echo " "
+ echo "Report for myvm"
+ echo "===================="
+ echo "***Computer Information***"
+ if [[ -z "$lshw" ]];
+ then
+  echo "There is no available Computer Information to display"
+ else
+  echo "Computer Manufacturer: $compvendor"
+  echo "Computer Description: $compmodel"
+  echo "Computer Serial Number: $compserial"
+ fi
+ echo "***CPU Information***"
+ if [[ -z "$lscpu" ]];
+ then
+  echo "There is no available CPU Information to display"
+ else
+  echo "CPU Manufacturer and Model: $cpumanu"", $cpumodel"
+  echo "CPU Architecture: $cpuarch"
+  echo "CPU Core Count: $cpucore"
+  echo "CPU Max Speed:"
+  echo "$cpuspeed"
+  echo "CPU L1d Cache Size:$cpul1d"
+  echo "CPU L1i Cache Size:$cpul1i"
+  echo "CPU L2 Cache Size:$cpul2"
+  echo "CPU L3 Cache Size:$cpul3"
+ fi
+ echo "***OS Information***"
+ if [[ -z "$osinfo" ]];
+ then
+  echo "There is no available OS Information to display"
+ else
+  echo "Linux Distro and Version: $os"'/'"$distro"
+ fi
+ echo "===================="
+ echo " "
+fi
