@@ -33,6 +33,21 @@ else
  distroname=$(echo "$osinfo" | grep 'Kernel')
  distrofullname=$(echo "$distroname" | awk '{getline} {print $2, $3}')
  distro=$(echo "$distrofullname" | cut -b 1-11)
+ memtotal=$(grep MemTotal /proc/meminfo | cut -b 18-)
+ meminfo=$(cat /proc/meminfo)
+ raminfo=$(dmidecode -t memory)
+ rammanu=$(echo "$raminfo" | grep Manufacturer: | cut -b 16-)
+ rammodel=$(echo "$raminfo" | grep 'Part Number:'| cut -b 15-)
+ ramsize=$(echo "$raminfo" | grep Size: | awk '!/Enabled/' | awk '!/Installed/' | awk '!/Maximum/' | cut -b 8-)
+ ramspeed=$(echo "$raminfo" | grep Speed: | awk '!/Current/' | awk '!/Configured/' | cut -b 9-)
+ ramloc=$(echo "$raminfo" | grep Locator: | awk '!/Bank/' | cut -b 11-)
+ diskinfo=$(lshw -c disk)
+ diskpar=$(echo "$diskinfo" | grep 'physical id:')
+ diskmanu=$(echo "$diskinfo" | grep 'vendor' | cut -b 15-)
+ diskmodel=$(echo "$diskinfo" | grep 'product' | cut -b 17-)
+ disksize=$(echo "$diskinfo" | grep 'size:' | cut -b 14-)
+ diskmount=$(echo "$diskinfo" | grep 'logical name:')
+ filesystem=$(df -H | awk '{print $1, $2, $4}')
  echo " "
  echo "Report for myvm"
  echo "===================="
@@ -66,6 +81,31 @@ else
   echo "There is no available OS Information to display"
  else
   echo "Linux Distro and Version: $os"'/'"$distro"
+ fi
+ echo "***RAM Information***"
+ if [[ -z "$raminfo" ]];
+ then
+  echo "There is no available RAM Information to display"
+ else
+  echo "RAM Manufacturer: $rammanu"
+  echo "RAM Model: $rammodel"
+  echo "RAM Size: $ramsize"
+  echo "RAM Speed: $ramspeed"
+  echo "RAM Physical Location: $ramloc"
+  echo "RAM Total Size: $memtotal"
+ fi
+ echo "***Storage Drive Information***"
+ if [[ -z "$diskinfo" ]];
+ then
+  echo "There is no available Disk Information to display"
+ else
+  echo "Drive Manufacturer: $diskmanu"
+  echo "Drive Model: $diskmodel"
+  echo "Drive Size: $disksize"
+  echo "Partition Number: $diskpar"
+  echo "Disk Mount Point: $diskmount"
+  echo "Filesystem Size and Free Space:"
+  echo "$filesystem"
  fi
  echo "===================="
  echo " "
