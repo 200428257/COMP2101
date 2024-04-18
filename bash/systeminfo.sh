@@ -1,4 +1,5 @@
 #!/bin/bash
+source reportfunctions.sh
 options=":s:l"
 longopt=("disk" "system" "network")
 #Line  5-72 is a while loop giving multiple options to the system information script for easier usage of the script.
@@ -49,24 +50,23 @@ while getopts "options" opt; do
     errormessage
     ;;
  esac
-else
- if (($EUID > 0)); then
-  echo "Admin privileges required to execute this script. Please log in as root/sudo."
-  exit 1
- else
-  echo " "
-  echo "Report for myvm"
-  echo "===================="
-  errorlog
-  computerreport
-  cpureport
-  osreport
-  ramreport
-  videoreport
-  diskreport
-  networkreport
-  errormessage
-  echo "===================="
-  echo " "
- fi
 done
+if (($EUID > 0)); then
+ echo "Admin privileges required to execute this script. Please log in as root/sudo."
+ exit 1
+else
+   echo " "
+   echo "Report for myvm"
+   echo "===================="
+   errorlog
+   computerreport
+   cpureport
+   osreport
+   ramreport
+   videoreport
+   diskreport
+   networkreport
+   errormessage
+   echo "===================="
+   echo " "
+fi
